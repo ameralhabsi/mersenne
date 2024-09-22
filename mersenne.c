@@ -17,6 +17,11 @@ uint32_t primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,
  919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997};
 
 //---------------------------------------------------------------
+// given a 64 bit numbers, the fucntion checks if it prime
+// first it checks the first primes from the LUT.
+// Then, it divides by these primes to speed up the process.
+// Finally, it tries all odd numbers till the square root of
+// the number
 int isPrime(uint64_t x)
 {
     uint32_t k, max;
