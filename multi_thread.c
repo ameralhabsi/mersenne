@@ -3,35 +3,8 @@
 #include <pthread.h>
 #include "mersenne.h"
 
-#define MAX 10000
+#define MAX 20000
 
-//---------------------------------------------------------------
-// provides the next number to be tested as exponent. Threads request these,
-// perform calculations and then request the next one. The first prime, 2, 
-// is intentionally omited.
-
-uint64_t get_next()
-{
-    static uint64_t p=2;
-    // p = p + 2;
-
-    // if(p>MAX)
-    //     return 0;
-
-    // return p;
-
-    if(p==2){
-        p=1;
-        return 2;
-    }
-
-    p = p + 2;
-    if(p>MAX)
-        return 0;
-
-    return p;
-
-}
 
 //---------------------------------------------------------------
 void* worker_thread(void* vargp)
@@ -39,7 +12,7 @@ void* worker_thread(void* vargp)
     uint64_t i;
     int r;
 
-    while((i = get_next())){
+    while((i = nextExponent())<MAX){
         r = isMersennePrime(i);
 
         if(r)

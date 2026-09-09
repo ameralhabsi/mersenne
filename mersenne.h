@@ -4,5 +4,6 @@
 
 int isPrime(uint64_t x);
 int isMersennePrime(uint64_t p);
+uint64_t nextExponent();
 
 #endif

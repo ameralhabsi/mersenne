@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <gmp.h>
-
+#include <stdbool.h>
 #define N 168
 
 uint32_t primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
@@ -17,15 +17,15 @@ uint32_t primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,
  919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997};
 
 //---------------------------------------------------------------
-// given a 64 bit numbers, the fucntion checks if it prime
-// first it checks the first primes from the LUT.
-// Then, it divides by these primes to speed up the process.
+// given a 64 bit integer, the fucntion checks if it is prime.
+// First it checks the first primes from the LUT.
+// Then, it tries to divide by these primes to speed up the process.
 // Finally, it tries all odd numbers till the square root of
 // the number
-int isPrime(uint64_t x)
+int is_prime(uint64_t x)
 {
     uint32_t k, max;
-    max = 1 + (int) floor(sqrt(x));
+    max = 1 + (int) sqrt(x);
 
     for(k=0; k<N; k++){
         if(x==primes[k])
@@ -43,6 +43,108 @@ int isPrime(uint64_t x)
     return 1;
 }
 
+// int nextPrime(uint64_t p){
+//     if(p==2)
+//         return 3;
+
+//     p+=2;
+//     while(!is_prime(p)){
+//         p+=2;
+//     }
+//     return p;
+// }   
+
+
+uint64_t power_mod(uint64_t base, uint64_t exp, uint64_t mod) {
+    uint64_t result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            result = (uint64_t)(((__int128_t)result * base) % mod);
+        }
+        base = (uint64_t)(((__int128_t)base * base) % mod);
+        exp /= 2;
+    }
+    return result;
+}
+
+// bool is_prime(uint64_t n) {
+//     if (n < 2) return false;
+//     if (n == 2 || n == 3) return true;
+//     if (n % 2 == 0 || n % 3 == 0) return false;
+//     for (uint64_t i = 5; i * i <= n; i += 6) {
+//         if (n % i == 0 || n % (i + 2) == 0) return false;
+//     }
+//     return true;
+// }
+
+uint64_t nextExponent() {
+    static uint64_t p = 1;
+
+           while (1) {
+        p++;
+        
+        // Step 0: Ensure exponent p is prime
+        if (!is_prime(p)) {
+            continue;
+        }
+
+        // Handle small Mersenne primes directly where M_p fits in standard types
+        if (p <= 7) {
+            return p;
+        }
+
+        // Step 3 (Euler's Theorem): If p ≡ 3 (mod 4) and q = 2p + 1 is prime, 
+        // then q divides M_p. For p > 3, q < M_p, so M_p is composite.
+        if (p % 4 == 3) {
+            uint64_t q = 2 * p + 1;
+            if (is_prime(q)) {
+                continue; // Composite!
+            }
+        }
+
+        // Precompute M_p if p < 64 to prevent q from matching or exceeding M_p
+        uint64_t Mp = 0;
+        if (p < 64) {
+            Mp = (1ULL << p) - 1;
+        }
+
+        // Steps 1 & 2: Fast Trial Division for q = 2kp + 1
+        bool has_factor = false;
+        const uint64_t MAX_K = 1000;
+
+        for (uint64_t k = 1; k <= MAX_K; k++) {
+            uint64_t q = 2 * k * p + 1;
+
+            // Overflow protection
+            if (q < p) break; 
+
+            // STOP if q reaches or exceeds M_p (q cannot be a PROPER factor if q >= M_p)
+            if (Mp > 0 && q >= Mp) {
+                break;
+            }
+
+            // Condition 1: q ≡ ±1 (mod 8)
+            uint64_t q_mod8 = q % 8;
+            if (q_mod8 != 1 && q_mod8 != 7) {
+                continue;
+            }
+
+            // Test if q is prime
+            if (is_prime(q)) {
+                if (power_mod(2, p, q) == 1) {
+                    has_factor = true; // Proper factor found; M_p is composite
+                    break;
+                }
+            }
+        }
+
+        if (!has_factor) {
+            return p;
+        }
+    }
+}
+
 //---------------------------------------------------------------
 // checks if exponent p leads to a Mersenne prime 2^p-1. It uses
 // Lucas-Lehmer test
@@ -56,7 +158,7 @@ int isMersennePrime(uint64_t p)   //
     if(p==2)
         return 1;
 
-    if(!isPrime(p))
+    if(!is_prime(p))
         return 0;     // if exponent is not prime the 2^p-1 cannot be prime
 
     // Lucas Lehmer test

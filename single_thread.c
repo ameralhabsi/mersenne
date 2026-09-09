@@ -5,14 +5,15 @@
 
 int main()
 {
-    uint64_t i;
+    uint64_t p=1;
     int r;
 
-    for(i = 2; i<650; i++){
-        r = isMersennePrime(i);
+    while(p<21702){
+        p=nextExponent();
+        r = isMersennePrime(p);
 
         if(r)
-            printf("2^%ld-1 is Mersenne prime\n", i);
+            printf("2^%ld-1 is Mersenne prime\n", p);
     }
 
     return 0;
